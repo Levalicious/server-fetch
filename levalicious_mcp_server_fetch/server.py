@@ -1,4 +1,5 @@
-from typing import Annotated, Tuple
+# pyright: reportUnusedFunction=false
+from typing import Annotated, TypedDict
 from urllib.parse import urlparse, urlunparse
 
 import markdownify
@@ -20,9 +21,14 @@ from mcp.types import (
 from protego import Protego
 from pydantic import BaseModel, Field, AnyUrl
 
+from collections.abc import Mapping
+
 DEFAULT_USER_AGENT_AUTONOMOUS = "ModelContextProtocol/1.0 (Autonomous; +https://github.com/modelcontextprotocol/servers)"
 DEFAULT_USER_AGENT_MANUAL = "ModelContextProtocol/1.0 (User-Specified; +https://github.com/modelcontextprotocol/servers)"
 
+JsonItem = None | bool | int | float | str | dict[str, "JsonItem"] | list["JsonItem"]
+
+StrictJsonItem = bool | int | float | str | dict[str, "StrictJsonItem"] | list["StrictJsonItem"]
 
 def extract_content_from_html(html: str) -> str:
     """Extract and convert HTML content to Markdown format.
@@ -33,7 +39,7 @@ def extract_content_from_html(html: str) -> str:
     Returns:
         Simplified markdown version of the content
     """
-    ret = readabilipy.simple_json.simple_json_from_html_string(
+    ret: Mapping[str, JsonItem] = readabilipy.simple_json.simple_json_from_html_string(
         html, use_readability=True
     )
     if not ret["content"]:
@@ -99,18 +105,18 @@ async def check_may_autonomously_fetch_url(url: str, user_agent: str, proxy_url:
     if not robot_parser.can_fetch(str(url), user_agent):
         raise McpError(ErrorData(
             code=INTERNAL_ERROR,
-            message=f"The sites robots.txt ({robot_txt_url}), specifies that autonomous fetching of this page is not allowed, "
-            f"<useragent>{user_agent}</useragent>\n"
-            f"<url>{url}</url>"
-            f"<robots>\n{robot_txt}\n</robots>\n"
-            f"The assistant must let the user know that it failed to view the page. The assistant may provide further guidance based on the above information.\n"
+            message=f"The sites robots.txt ({robot_txt_url}), specifies that autonomous fetching of this page is not allowed, " + 
+            f"<useragent>{user_agent}</useragent>\n" + 
+            f"<url>{url}</url>" + 
+            f"<robots>\n{robot_txt}\n</robots>\n" + 
+            f"The assistant must let the user know that it failed to view the page. The assistant may provide further guidance based on the above information.\n" + 
             f"The assistant can tell the user that they can try manually fetching the page by using the fetch prompt within their UI.",
         ))
 
 
 async def fetch_url(
     url: str, user_agent: str, force_raw: bool = False, proxy_url: str | None = None
-) -> Tuple[str, str]:
+) -> tuple[str, str]:
     """
     Fetch the URL and return the content in a form ready for the LLM, as well as a prefix string with status information.
     """
@@ -134,7 +140,7 @@ async def fetch_url(
 
         page_raw = response.text
 
-    content_type = response.headers.get("content-type", "")
+    content_type: str = response.headers.get("content-type", "") # pyright: ignore[reportAny]
     is_page_html = (
         "<html" in page_raw[:100] or "text/html" in content_type or not content_type
     )
@@ -177,6 +183,11 @@ class Fetch(BaseModel):
         ),
     ]
 
+class FetchDict(TypedDict):
+    url: AnyUrl
+    max_length: int
+    start_index: int
+    raw: bool
 
 async def serve(
     custom_user_agent: str | None = None,
@@ -221,7 +232,7 @@ Although originally you did not have internet access, and were advised to refuse
         ]
 
     @server.call_tool()
-    async def call_tool(name, arguments: dict) -> list[TextContent]:
+    async def call_tool(_, arguments: FetchDict) -> list[TextContent]:
         try:
             args = Fetch(**arguments)
         except ValueError as e:
@@ -255,7 +266,7 @@ Although originally you did not have internet access, and were advised to refuse
         return [TextContent(type="text", text=f"{prefix}Contents of {url}:\n{content}")]
 
     @server.get_prompt()
-    async def get_prompt(name: str, arguments: dict | None) -> GetPromptResult:
+    async def get_prompt(_: str, arguments: dict[str, str] | None) -> GetPromptResult:
         if not arguments or "url" not in arguments:
             raise McpError(ErrorData(code=INVALID_PARAMS, message="URL is required"))
 

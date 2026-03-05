@@ -37,7 +37,7 @@ dev = ["pyright>=1.1.389", "ruff>=0.7.3"]
 levalicious-mcp-server-fetch = "levalicious_mcp_server_fetch:main"
 
 [tool.basedpyright]
-include = ["yarliq"]
+include = ["levalicious_mcp_server_fetch"]
 pythonVersion = "3.13"
 pythonPlatform = "Linux"
 venvPath = "."
