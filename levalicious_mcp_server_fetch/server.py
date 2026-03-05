@@ -3,7 +3,7 @@ from typing import Annotated, TypedDict
 from urllib.parse import urlparse, urlunparse
 
 import markdownify
-import readabilipy.simple_json
+import readabilipy.simple_json # pyright: ignore[reportMissingTypeStubs]
 from mcp.shared.exceptions import McpError
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
@@ -28,8 +28,6 @@ DEFAULT_USER_AGENT_MANUAL = "ModelContextProtocol/1.0 (User-Specified; +https://
 
 JsonItem = None | bool | int | float | str | dict[str, "JsonItem"] | list["JsonItem"]
 
-StrictJsonItem = bool | int | float | str | dict[str, "StrictJsonItem"] | list["StrictJsonItem"]
-
 def extract_content_from_html(html: str) -> str:
     """Extract and convert HTML content to Markdown format.
 
@@ -39,7 +37,7 @@ def extract_content_from_html(html: str) -> str:
     Returns:
         Simplified markdown version of the content
     """
-    ret: Mapping[str, JsonItem] = readabilipy.simple_json.simple_json_from_html_string(
+    ret: Mapping[str, JsonItem] = readabilipy.simple_json.simple_json_from_html_string( # pyright: ignore[reportUnknownMemberType]
         html, use_readability=True
     )
     if not ret["content"]:
