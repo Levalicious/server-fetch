@@ -31,10 +31,19 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pyright>=1.1.389", "ruff>=0.7.3"]
+dev = ["pyright>=1.1.389", "ruff>=0.7.3", "pytest>=8.0.0", "pytest-asyncio>=0.21.0", "pytest-cov"]
 
 [project.scripts]
 levalicious-mcp-server-fetch = "levalicious_mcp_server_fetch:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+[tool.coverage.run]
+branch = true
+relative_files = true
+omit = ["tests/*", "__main__.py"]
 
 [tool.basedpyright]
 include = ["levalicious_mcp_server_fetch"]
