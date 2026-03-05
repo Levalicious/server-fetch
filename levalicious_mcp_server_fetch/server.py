@@ -23,8 +23,8 @@ from pydantic import BaseModel, Field, AnyUrl
 
 from collections.abc import Mapping
 
-DEFAULT_USER_AGENT_AUTONOMOUS = "User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:147.0) Gecko/20100101 Firefox/147.0"
-DEFAULT_USER_AGENT_MANUAL = "User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:147.0) Gecko/20100101 Firefox/147.0"
+DEFAULT_USER_AGENT_AUTONOMOUS = "ModelContextProtocol/1.0 (Autonomous; +https://github.com/modelcontextprotocol/servers)"
+DEFAULT_USER_AGENT_MANUAL = "ModelContextProtocol/1.0 (User-Specified; +https://github.com/modelcontextprotocol/servers)"
 
 JsonItem = None | bool | int | float | str | dict[str, "JsonItem"] | list["JsonItem"]
 
