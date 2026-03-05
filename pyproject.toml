@@ -1,6 +1,10 @@
+[build-system]
+requires = ["setuptools>=68.0", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "levalicious-mcp-server-fetch"
-version = "0.0.0"
+version = "0.0.1"
 description = "A Model Context Protocol server providing tools to fetch and convert web content for usage by LLMs"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -23,14 +27,31 @@ dependencies = [
     "pydantic>=2.0.0",
     "readabilipy>=0.2.0",
     "requests>=2.32.3",
+    "typed-argument-parser>=1.11.0",
 ]
+
+[project.optional-dependencies]
+dev = ["pyright>=1.1.389", "ruff>=0.7.3", "pytest>=8.0.0", "pytest-asyncio>=0.21.0", "pytest-cov"]
 
 [project.scripts]
 levalicious-mcp-server-fetch = "levalicious_mcp_server_fetch:main"
 
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
 
-[tool.uv]
-dev-dependencies = ["pyright>=1.1.389", "ruff>=0.7.3"]
+[tool.coverage.run]
+branch = true
+relative_files = true
+omit = ["tests/*", "__main__.py"]
+
+[tool.basedpyright]
+include = ["levalicious_mcp_server_fetch"]
+pythonVersion = "3.13"
+pythonPlatform = "Linux"
+venvPath = "."
+venv = ".venv"
+
+[tool.ruff]
+target-version = "py313"
+line-length = 120
