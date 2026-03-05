@@ -2,9 +2,9 @@ from .server import serve
 from tap import Tap
 
 class FetchRequestParser(Tap):
-    user_agent: str # pyright: ignore[reportUninitializedInstanceVariable]
+    user_agent: str | None = None
     ignore_robots_txt: bool = False
-    proxy_url: str  # pyright: ignore[reportUninitializedInstanceVariable]
+    proxy_url: str | None = None
 
 def main():
     """MCP Fetch Server - HTTP fetching functionality for MCP"""
