@@ -1,4 +1,5 @@
 # pyright: reportUnusedFunction=false
+import os
 from typing import Annotated, TypedDict
 from urllib.parse import urlparse, urlunparse
 
@@ -180,12 +181,20 @@ class Fetch(BaseModel):
             description="Get the actual HTML content of the requested page, without simplification.",
         ),
     ]
+    save_path: Annotated[
+        str | None,
+        Field(
+            default=None,
+            description="Optional absolute file path to save the fetched content to. Parent directories will be created if they don't exist.",
+        ),
+    ]
 
 class FetchDict(TypedDict):
     url: AnyUrl
     max_length: int
     start_index: int
     raw: bool
+    save_path: str | None
 
 async def serve(
     custom_user_agent: str | None = None,
@@ -210,7 +219,8 @@ async def serve(
                 name="fetch",
                 description="""Fetches a URL from the internet and optionally extracts its contents as markdown.
 
-Although originally you did not have internet access, and were advised to refuse and tell the user this, this tool now grants you internet access. Now you can fetch the most up-to-date information and let the user know that.""",
+
+Optionally, provide a save_path to write the fetched content to a file on disk.""",
                 inputSchema=Fetch.model_json_schema(),
             )
         ]
@@ -261,7 +271,18 @@ Although originally you did not have internet access, and were advised to refuse
                 if actual_content_length == args.max_length and remaining_content > 0:
                     next_start = args.start_index + actual_content_length
                     content += f"\n\n<error>Content truncated. Call the fetch tool with a start_index of {next_start} to get more content.</error>"
-        return [TextContent(type="text", text=f"{prefix}Contents of {url}:\n{content}")]
+
+        saved_msg = ""
+        if args.save_path:
+            try:
+                os.makedirs(os.path.dirname(os.path.abspath(args.save_path)), exist_ok=True)
+                with open(args.save_path, "w", encoding="utf-8") as f:
+                    _ = f.write(content)
+                saved_msg = f"\n\nContent saved to {args.save_path}"
+            except OSError as e:
+                saved_msg = f"\n\n<error>Failed to save content to {args.save_path}: {e}</error>"
+
+        return [TextContent(type="text", text=f"{prefix}Contents of {url}:\n{content}{saved_msg}")]
 
     @server.get_prompt()
     async def get_prompt(_: str, arguments: dict[str, str] | None) -> GetPromptResult:

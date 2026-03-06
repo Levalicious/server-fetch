@@ -1,5 +1,8 @@
+# pyright: reportAny=false
 """Tests for the fetch MCP server."""
 
+import os
+import tempfile
 import pytest
 from unittest.mock import AsyncMock, patch, MagicMock
 from mcp.shared.exceptions import McpError
@@ -9,6 +12,7 @@ from levalicious_mcp_server_fetch.server import (
     get_robots_txt_url,
     check_may_autonomously_fetch_url,
     fetch_url,
+    serve,
     DEFAULT_USER_AGENT_AUTONOMOUS,
 )
 
@@ -279,7 +283,7 @@ class TestFetchUrl:
             mock_client_class.return_value.__aexit__ = AsyncMock(return_value=None)
 
             with pytest.raises(McpError):
-                await fetch_url(
+                _ = await fetch_url(
                     "https://example.com/notfound",
                     DEFAULT_USER_AGENT_AUTONOMOUS
                 )
@@ -297,7 +301,7 @@ class TestFetchUrl:
             mock_client_class.return_value.__aexit__ = AsyncMock(return_value=None)
 
             with pytest.raises(McpError):
-                await fetch_url(
+                _ = await fetch_url(
                     "https://example.com/error",
                     DEFAULT_USER_AGENT_AUTONOMOUS
                 )
@@ -316,7 +320,7 @@ class TestFetchUrl:
             mock_client_class.return_value.__aenter__ = AsyncMock(return_value=mock_client)
             mock_client_class.return_value.__aexit__ = AsyncMock(return_value=None)
 
-            await fetch_url(
+            _ = await fetch_url(
                 "https://example.com/data",
                 DEFAULT_USER_AGENT_AUTONOMOUS,
                 proxy_url="http://proxy.example.com:8080"
@@ -324,3 +328,25 @@ class TestFetchUrl:
 
             # Verify AsyncClient was called with proxy
             mock_client_class.assert_called_once_with(proxies="http://proxy.example.com:8080")
+
+
+class TestSavePath:
+    """Tests for the save_path functionality in the Fetch tool."""
+
+    def test_fetch_model_accepts_save_path(self):
+        """Test that Fetch model accepts save_path parameter."""
+        from levalicious_mcp_server_fetch.server import Fetch
+        args = Fetch(url="https://example.com", save_path="/tmp/test.md")  # pyright: ignore[reportCallIssue]
+        assert args.save_path == "/tmp/test.md"
+
+    def test_fetch_model_save_path_defaults_none(self):
+        """Test that save_path defaults to None."""
+        from levalicious_mcp_server_fetch.server import Fetch
+        args = Fetch(url="https://example.com")  # pyright: ignore[reportCallIssue]
+        assert args.save_path is None
+
+    def test_save_path_in_schema(self):
+        """Test that save_path appears in the JSON schema."""
+        from levalicious_mcp_server_fetch.server import Fetch
+        schema = Fetch.model_json_schema()
+        assert "save_path" in schema["properties"]
