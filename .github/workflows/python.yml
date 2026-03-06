@@ -38,13 +38,20 @@ jobs:
           python-version-file: ".python-version"
 
       - name: Install dependencies
-        run: pip install .[dev] build
+        run: |
+          python -m venv .venv
+          . .venv/bin/activate
+          pip install .[dev] build
 
-      - name: Run pyright
-        run: pyright
+      - name: Run basedpyright
+        run: |
+          . .venv/bin/activate
+          basedpyright
 
       - name: Build package
-        run: python -m build
+        run: |
+          . .venv/bin/activate
+          python -m build
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
